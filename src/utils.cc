@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 //     limitations under the License.
 
-
+#define OPENSSL_API_COMPAT 0x10100000L
 #include "utils.h"
 
 #include <openssl/sha.h>

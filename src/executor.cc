@@ -70,7 +70,7 @@ Executor::Executor() {
 
 #if DEBUGMODE == 0
   // if we are not in DEBUGMODE this will instead be inlined in Executor::ExecuteCodePage()
-  std::array<int, 4> signals_to_handle = {SIGSEGV, SIGILL, SIGFPE, SIGTRAP};
+  std::array<int, 5> signals_to_handle = {SIGSEGV, SIGILL, SIGFPE, SIGTRAP, SIGBUS};
   // register fault handler
   RegisterFaultHandler<signals_to_handle.size()>(signals_to_handle);
 #endif
@@ -79,7 +79,7 @@ Executor::Executor() {
 Executor::~Executor() {
 #if DEBUGMODE == 0
   // if we are not in DEBUGMODE this will instead be inlined in Executor::ExecuteCodePage()
-  std::array<int, 4> signals_to_handle = {SIGSEGV, SIGILL, SIGFPE, SIGTRAP};
+  std::array<int, 5> signals_to_handle = {SIGSEGV, SIGILL, SIGFPE, SIGTRAP, SIGBUS};
   UnregisterFaultHandler<signals_to_handle.size()>(signals_to_handle);
 #endif
 }
@@ -633,6 +633,7 @@ static int sigsegv_no = 0;
 static int sigfpe_no = 0;
 static int sigill_no = 0;
 static int sigtrap_no = 0;
+static int sigbus_no = 0;
 
 void Executor::PrintFaultCount() {
   std::cout << "=== Faultcounters of Executor ===" << std::endl
@@ -640,6 +641,7 @@ void Executor::PrintFaultCount() {
             << "\tSIGFPE: " << sigfpe_no << std::endl
             << "\tSIGILL: " << sigill_no << std::endl
             << "\tSIGTRAP: " << sigtrap_no << std::endl
+            << "\tSIGBUS: " << sigbus_no << std::endl
             << "=================================" << std::endl;
 }
 
@@ -654,6 +656,8 @@ void Executor::FaultHandler(int sig) {
     case SIGILL:sigill_no++;
       break;
     case SIGTRAP:sigtrap_no++;
+      break;
+    case SIGBUS:sigbus_no++;
       break;
     default:std::abort();
   }
@@ -685,7 +689,7 @@ int Executor::ExecuteCodePage(void* codepage, uint64_t* cycles_elapsed) {
 #if DEBUGMODE == 1
   // list of signals that we catch and throw as errors
   // (without DEBUGMODE the array is defined in the error case)
-  std::array<int, 4> signals_to_handle = {SIGSEGV, SIGILL, SIGFPE, SIGTRAP};
+  std::array<int, 5> signals_to_handle = {SIGSEGV, SIGILL, SIGFPE, SIGTRAP, SIGBUS};
   // register fault handler (if not in debugmode we do this in constructor/destructor as
   //    this has a huge impact on the runtime)
   RegisterFaultHandler<signals_to_handle.size()>(signals_to_handle);
@@ -711,7 +715,7 @@ int Executor::ExecuteCodePage(void* codepage, uint64_t* cycles_elapsed) {
 #if DEBUGMODE == 0
     // only allocate the array in case of an error to safe execution time
     // list of signals that we catch and throw as errors
-    std::array<int, 4> signals_to_handle = {SIGSEGV, SIGILL, SIGFPE, SIGTRAP};
+    std::array<int, 5> signals_to_handle = {SIGSEGV, SIGILL, SIGFPE, SIGTRAP, SIGBUS};
 #endif
     sigset_t signal_set;
     sigemptyset(&signal_set);

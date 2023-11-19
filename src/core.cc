@@ -51,11 +51,9 @@ void Core::FindAndOutputTriggerpairsWithoutAssumptions(const std::string& output
                          "reset-uid;reset-sequence;reset-category;reset-extension;"
                          "reset-isa-set");
   output_csvfile << headerline << std::endl;
-
   size_t max_instruction_no = code_generator_.GetNumberOfInstructions();
   for (size_t measurement_idx = 0; measurement_idx < max_instruction_no; measurement_idx++) {
-    x86Instruction measurement_sequence =
-        code_generator_.CreateInstructionFromIndex(measurement_idx);
+    x86Instruction measurement_sequence = code_generator_.CreateInstructionFromIndex(measurement_idx);
     LOG_INFO("processing measurement " + std::to_string(measurement_idx) + "/"
                  + std::to_string(max_instruction_no - 1));
 
@@ -317,7 +315,6 @@ void Core::OutputNonFaultingInstructions(const std::string& output_filename) {
   LOG_INFO("found " + std::to_string(non_faulting_instructions.size())
                + " non faulting instructions");
   std::ofstream output_file(output_filename);
-
   // write headerline
   std::string headerline("byte_representation;assembly_code;category;extension;isa_set");
   output_file << headerline << std::endl;
@@ -348,11 +345,16 @@ std::vector<size_t> Core::FindNonFaultingInstructions() {
     x86Instruction measurement_sequence = code_generator_.CreateInstructionFromIndex(inst_idx);
     int64_t result;
     LOG_INFO("testing instruction " + measurement_sequence.assembly_code);
+    if (measurement_sequence.assembly_code.find("BPL") != std::string::npos)
+    {
+      continue;
+    }
     int error = executor_.TestTriggerSequence(measurement_sequence.byte_representation,
                                               measurement_sequence.byte_representation,
                                               measurement_sequence.byte_representation,
                                               false,
                                               1, 1, &result);
+    // printf("error: %d\r\n", error);
     if (error == 0) {
       non_faulting_instruction_indexes.push_back(inst_idx);
     }
